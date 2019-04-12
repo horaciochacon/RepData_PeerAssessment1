@@ -85,27 +85,27 @@ median(stepsPerDay$steps, na.rm = TRUE)
 
 ## What is the average daily activity pattern?
 
-We generate a *avgSteps* data frame with the average steps of the 5-min intervals for each day. Then we plot a time series plot with geom_line(). We can see the days with no data or NAs making the plot somewhat "incomplete".
+We generate a *avgSteps* data frame with the average steps of the 5-min across all the days. Then we plot a time series plot with geom_line(). 
 
 
 ```r
 avgSteps <- activity %>% 
-    group_by(date) %>% 
+    group_by(interval) %>% 
     summarise(steps = mean(steps, na.rm = TRUE))
-ggplot(avgSteps, aes(x = date,y = steps)) + geom_line()
+ggplot(avgSteps, aes(x = interval,y = steps)) + geom_line()
 ```
 
 ![](PA1_template_files/figure-html/timeseries1-1.png)<!-- -->
 
-The day with the highest average steps during the 5 min interval was the:
+The 5 min interval with the averaged highest umber of steps is:
 
 
 ```r
-avgSteps$date[which.max(avgSteps$steps)]
+avgSteps$interval[which.max(avgSteps$steps)]
 ```
 
 ```
-## [1] "2012-11-23"
+## [1] 835
 ```
 
 ## Imputing missing values
