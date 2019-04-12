@@ -6,20 +6,18 @@ output:
     keep_md: true
 ---
 
-```{r include=FALSE}
-options(scipen=999)
-```
+
 
 
 ## Loading and preprocessing the data
 
 Here we load the necesary packages (Tidyverse) and read the database in the activity object.
 
-```{r Loading, message=FALSE, warning=FALSE}
+
+```r
 library(tidyverse)
 
 activity <- read_csv("activity.zip")
-
 ```
 
 
@@ -27,7 +25,8 @@ activity <- read_csv("activity.zip")
 
 We construct a *stepsPerDay* data frame with the summarized sum of steps for every day and glimpse their content with *head()*.
 
-```{r StepsPerDay}
+
+```r
 stepsPerDay <- activity %>% 
     group_by(date) %>% 
     summarise(steps = sum(steps))
@@ -35,9 +34,22 @@ stepsPerDay <- activity %>%
 head(stepsPerDay)
 ```
 
+```
+## # A tibble: 6 x 2
+##   date       steps
+##   <date>     <dbl>
+## 1 2012-10-01    NA
+## 2 2012-10-02   126
+## 3 2012-10-03 11352
+## 4 2012-10-04 12116
+## 5 2012-10-05 13294
+## 6 2012-10-06 15420
+```
+
 Here we make histogram total number of steps taken for each days. We also plot 2 vertical lines for the x value of the mean an median (they are roughly the same).
 
-```{r histogram_1, warning=FALSE}
+
+```r
 ggplot(stepsPerDay, aes(x = steps)) + 
     geom_histogram(bins = 20, fill = "orange") +
     geom_vline(xintercept = mean(stepsPerDay$steps, 
@@ -46,16 +58,28 @@ ggplot(stepsPerDay, aes(x = steps)) +
                                    na.rm = TRUE), lty = 2, lwd = 2)
 ```
 
+![](PA1_template_files/figure-html/histogram_1-1.png)<!-- -->
+
 The mean steps taken per day were:
 
-```{r mean1}
+
+```r
  mean(stepsPerDay$steps, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 
 The median steps taken per day were:
 
-```{r median1}
+
+```r
 median(stepsPerDay$steps, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 
@@ -63,17 +87,25 @@ median(stepsPerDay$steps, na.rm = TRUE)
 
 We generate a *avgSteps* data frame with the average steps of the 5-min intervals for each day. Then we plot a time series plot with geom_line(). We can see the days with no data or NAs making the plot somewhat "incomplete".
 
-```{r timeseries1, warning=FALSE}
+
+```r
 avgSteps <- activity %>% 
     group_by(date) %>% 
     summarise(steps = mean(steps, na.rm = TRUE))
 ggplot(avgSteps, aes(x = date,y = steps)) + geom_line()
 ```
 
+![](PA1_template_files/figure-html/timeseries1-1.png)<!-- -->
+
 The day with the highest average steps during the 5 min interval was the:
 
-```{r max_date}
+
+```r
 avgSteps$date[which.max(avgSteps$steps)]
+```
+
+```
+## [1] "2012-11-23"
 ```
 
 ## Imputing missing values
@@ -82,14 +114,20 @@ avgSteps$date[which.max(avgSteps$steps)]
 
 We have the following number of missing values (NAs):
 
-```{r NAs}
+
+```r
 sum(is.na(activity$steps))
+```
+
+```
+## [1] 2304
 ```
 ### Imputation of median per interval
 
 We are going to impute the NA's with its corresponging 5-min interval median. For this first we construct an *avgInterval* data frame with the median for every 5-min interval.
 
-```{r imp1}
+
+```r
 avgInterval <- activity %>% 
     group_by(interval) %>% 
     summarise(steps = median(steps, na.rm = TRUE))
@@ -97,7 +135,8 @@ avgInterval <- activity %>%
 
 Then we merge our *activity* data frame with the newly created *avgInterval* by "interval". This means that our *activity* df will be populated with a *steps.y* variable corresponding to the 5-min interval median steps. Finally we impute missing values from *steps.y*, when steps.x is missinf (is.na). Then we select the three necesary variables.
 
-```{r imp2}
+
+```r
 activityImp <- merge(activity,avgInterval,by = "interval") %>% 
     mutate(stepsImp = ifelse(is.na(steps.x),steps.y,steps.x)) %>% 
     select(stepsImp,date,interval) %>% rename(steps = stepsImp)
@@ -105,7 +144,8 @@ activityImp <- merge(activity,avgInterval,by = "interval") %>%
 
 We construct a *stepsPerDayImp* data frame.
 
-```{r steps_imp}
+
+```r
 stepsPerDayImp <- activityImp %>% 
     group_by(date) %>% 
     summarise(steps = sum(steps))
@@ -113,7 +153,8 @@ stepsPerDayImp <- activityImp %>%
 
 We again plot a histogram with of the number of steps per day. We also plot the median (red) and mean (blue). We see that now the mean has shifted slightly to the left due to the extreme values (imputed) near zero.
 
-```{r histogram_2, warning=FALSE}
+
+```r
 ggplot(stepsPerDayImp, aes(x = steps)) + 
     geom_histogram(bins = 20, fill = "orange") +
     geom_vline(xintercept = mean(stepsPerDayImp$steps, 
@@ -122,17 +163,29 @@ ggplot(stepsPerDayImp, aes(x = steps)) +
                                    na.rm = T), lty = 2, lwd = 2, col = "red")
 ```
 
+![](PA1_template_files/figure-html/histogram_2-1.png)<!-- -->
+
 
 The mean steps taken per day were:
 
-```{r mean2}
+
+```r
  mean(stepsPerDayImp$steps, na.rm = TRUE)
+```
+
+```
+## [1] 9503.869
 ```
 
 The median steps taken per day were:
 
-```{r median2}
+
+```r
 median(stepsPerDayImp$steps, na.rm = TRUE)
+```
+
+```
+## [1] 10395
 ```
 
 
@@ -141,7 +194,8 @@ median(stepsPerDayImp$steps, na.rm = TRUE)
 
 We create factor variable *typeofDay* depending on if it's a "weekday" or "weekend" day.
 
-```{r weekday}
+
+```r
 activityImp <- activityImp %>% 
     mutate(typeOfDay = ifelse(weekdays(date) %in% c("Saturday","Sunday"),
                               "Weekend","Weekday")) %>% 
@@ -150,7 +204,8 @@ activityImp <- activityImp %>%
 
 We create a summarized data frame *stepsWeekInt* with the average steps per every 5-min interval depending on the type of day.
 
-```{r stepsweekint}
+
+```r
 stepsWeekInt <- activityImp %>% 
     group_by(typeOfDay,interval) %>% 
     summarise(steps = mean(steps, na.rm = TRUE))
@@ -158,9 +213,12 @@ stepsWeekInt <- activityImp %>%
 
 Finally we plot it in a 2 by 1 panel plot.
 
-```{r timeseries_2}
+
+```r
 ggplot(stepsWeekInt, aes(x = interval, y = steps)) + 
     geom_line() +
     facet_grid(typeOfDay~.)
 ```
+
+![](PA1_template_files/figure-html/timeseries_2-1.png)<!-- -->
 
